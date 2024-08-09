@@ -17,9 +17,12 @@ function Wish() {
   const [page, setPage] = useState(1);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [type, setType] = useState<string | null>(null);
-  
-  const { wishlistItems, isPending, isError, isSuccess } = useWishlistItems(page, type);
-  const { mutateDeleteWishlistItem, isPendingDelete, isErrorDelete, isSuccessDelete } = useDeleteWishlistItem();
+
+  const { wishlistItems, isPending, isError, isSuccess } = useWishlistItems(
+    page,
+    type
+  );
+  const { mutateDeleteWishlistItem } = useDeleteWishlistItem();
   console.log(wishlistItems);
 
   const handleDelete = (productId: number) => {
@@ -30,36 +33,42 @@ function Wish() {
     setSelectedItemId(id);
     openModal();
   };
-  
-  const selectedItem = wishlistItems?.content?.find((item) => item.id === selectedItemId);
+
+  const selectedItem = wishlistItems?.content?.find(
+    (item) => item.id === selectedItemId
+  );
 
   if (isPending) return <div>Loading...</div>;
-  if (isError) return <div>위시리스트를 불러오지 못했습니다. 위시리스트를 추가해주세요.</div>;
-  if (isSuccess) return (
-    <MypageContentsContainer>
-      <ContentsHeader>{/* <ClothesTypes /> */}</ContentsHeader>
-      <ContentsMain>
-        <WishsGrid
-          onClick={handleItemClick}
-          data={wishlistItems.content}
-          onDelete={handleDelete}
-        />
-      </ContentsMain>
-      <ContentsFooter>
-        <PageMoveButton
-          currentPage={page}
-          onPageChange={(newPage) => setPage(newPage)}
-        />
-        {isVisible && (
-          <ModalPortal>
-            <ModalLayout onClose={closeModal}>
-              <WishDetail item={selectedItem!} />
-            </ModalLayout>
-          </ModalPortal>
-        )}
-      </ContentsFooter>
-    </MypageContentsContainer>
-  );
+  if (isError)
+    return (
+      <div>위시리스트를 불러오지 못했습니다. 위시리스트를 추가해주세요.</div>
+    );
+  if (wishlistItems)
+    return (
+      <MypageContentsContainer>
+        <ContentsHeader>{/* <ClothesTypes /> */}</ContentsHeader>
+        <ContentsMain>
+          <WishsGrid
+            onClick={handleItemClick}
+            data={wishlistItems.content}
+            onDelete={handleDelete}
+          />
+        </ContentsMain>
+        <ContentsFooter>
+          <PageMoveButton
+            currentPage={page}
+            onPageChange={(newPage) => setPage(newPage)}
+          />
+          {isVisible && (
+            <ModalPortal>
+              <ModalLayout onClose={closeModal}>
+                <WishDetail item={selectedItem!} />
+              </ModalLayout>
+            </ModalPortal>
+          )}
+        </ContentsFooter>
+      </MypageContentsContainer>
+    );
 }
 
 export default Wish;

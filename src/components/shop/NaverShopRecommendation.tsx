@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import {
   useCreateWishlistItem,
+  useDeleteRecommendWishlistItem,
   useDeleteWishlistItem,
-  useWishlistItem,
-  useWishlistItems,
 } from "@/queries/wishlistQueries";
 import LikeButton from "@components/LikeButton";
-import { NaverProduct, WishlistItem } from "@/api/wishlistApi";
+import { NaverProduct } from "@/api/wishlistApi";
 import "swiper/css";
 import "swiper/css/navigation";
 import styled from "styled-components";
@@ -24,32 +23,52 @@ const NaverShopRecommendation: React.FC<NaverShopRecommendationProps> = ({
   toggleLike,
   data,
 }) => {
-  const [id, setId] = useState(1);
+  const [wishlistIds, setWishlistIds] = useState<(number | null)[]>(
+    data.map(() => null)
+  );
+  const { mutateCreateWishlistItem } = useCreateWishlistItem();
+  const { mutateDeleteRecommendWishlistItem } =
+    useDeleteRecommendWishlistItem();
 
-  // 전체 조회 훅 호출
-  // const { data: slideData = { content: [] }, isLoading, error } = useWishlistItem(id);
-
-  const { mutate: createWishlistItem } = useCreateWishlistItem();
-  const { mutate: deleteWishlistItem } = useDeleteWishlistItem();
-
-  console.log("데이터", data);
-
-  const handleLikeClick = (index: number) => {
+  const handleLikeClick = (index: number, productId: number) => {
     const updatedLiked = [...liked];
+    const updatedWishlistIds = [...wishlistIds];
     updatedLiked[index] = !updatedLiked[index];
     toggleLike(index);
 
-    const item = data[index]; // 수정
+    const item = data[index];
 
     if (updatedLiked[index]) {
-      createWishlistItem(item);
+      mutateCreateWishlistItem(item, {
+        onSuccess: (response) => {
+          console.log("index", index);
+          console.log("Item added to wishlist:", response);
+          updatedWishlistIds[index] = response.id; // 여기서 추가된 위시리스트 항목의 ID를 저장
+          setWishlistIds(updatedWishlistIds);
+        },
+        onError: (error) => {
+          console.error("Error adding item:", error);
+        },
+      });
     } else {
-      deleteWishlistItem(item.id);
+      console.log("---😎인덱스ㅡㅡindex", index);
+      const wishlistId = updatedWishlistIds[index];
+      if (wishlistId !== null) {
+        mutateDeleteRecommendWishlistItem(productId, {
+          onSuccess: () => {
+            console.log("Item deleted successfully:", wishlistId);
+            // updatedWishlistIds[index] = null;
+            setWishlistIds(updatedWishlistIds);
+          },
+          onError: (error) => {
+            console.error("Error deleting item:", error);
+          },
+        });
+      } else {
+        console.error("No valid wishlist ID to delete.");
+      }
     }
   };
-
-  // if (isLoading) return <div>Loading...</div>;
-  // if (error) return <div>Error loading data</div>;
 
   return (
     <HomeContents5>
@@ -78,7 +97,7 @@ const NaverShopRecommendation: React.FC<NaverShopRecommendationProps> = ({
                   </NaverShopDataText>
                   <LikeButton
                     active={liked[index]}
-                    onClick={() => handleLikeClick(index)}
+                    onClick={() => handleLikeClick(index, slide.productId)}
                   />
                 </NaverShopData>
               </SwiperSlide>

@@ -1,3 +1,4 @@
+import React from "react";
 import styled from "styled-components";
 import AddButton from "@components/AddButton";
 import Icon from "@components/Icon";
@@ -131,5 +132,5 @@ const SearchWrapper = styled.div`
   display: flex;
   justify-content: flex-end;
   width: 300px;
-  padding-left: 20px
+  padding-left: 20px;
 `;
